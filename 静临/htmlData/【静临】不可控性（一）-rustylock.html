@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link media='screen' type='text/css' rel='stylesheet' href='//l.bst.126.net/rsc/js/pagelayer/pagelayer.css?0017'/><script type='text/javascript' src='//l.bst.126.net/rsc/js/pagelayer/pagelayer.js?0011'></script>
+
+<meta name="themename" content="29002"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>【静临】不可控性（一）-rustylock</title>
+<link rel="shortcut icon" href="https://avaimg.nosdn.127.net/img/YTRUaWYzVW9rVWJ6RGJJM042VmxqTzlzZ2kzSU9GYWRDZm40RVplVUVNOVpYeTRoa1kwZTZBPT0.jpg?imageView&thumbnail=16x16&quality=90&type=jpg">
+<link rel="alternate" type="application/rss+xml" href="https://iyniq.lofter.com/rss">
+<meta name="Keywords" content="静临"/>
+<meta name="Description" content="*临烧背景 *私设有 *逻辑死 &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash; &ldquo;今天的坐先生&hellip;&hellip;有些不一样呢。&rdquo; &ldquo;不一样的是临也少爷你吧，老朽可没见过你这副严阵以待的架势。放松点吧，只是回池袋与久违的双亲见面而已。&rdquo; 黑发青年将目光从老者白得刺眼的衬衫领子上移开。接着又像想到什么似的，装作若无其事地将目光移了回来。戴着眼镜的老者一如既往地穿着以黑白为主色调的西装，可确实与过去的样式有些不同，这让临也感到了一股没来由的违和。他露出了一个僵硬的微笑，回到&ldquo;真是难得啊，您偶尔也会把我当做晚辈一样关心呢。不过还是提前告知您一下，池袋可是这个世界上最&mdash;&mdash;最危险的地方了，于我..."/>
+
+<meta name="image:Logo" content=""/>
+<meta name="image:背景" content="//imglf3.nosdn0.126.net/img/1553236065974180.png"/>
+<meta name="color:背景" content="#dfdfe1"/>
+<meta name="color:链接" content="#828d95"/>
+<meta name="if:固定背景" content="1"/>
+<meta name="if:文章显示摘要" content="0"/>
+
+<meta name="group1:" content="宽度750#宽度750|宽度850|宽度1000"/>
+<meta name="group2:" content="无#木纹|黑红|阳光橙|纸皮盒|蓝红|金皮质|无"/>
+
+<link href="//imglf3.nosdn0.126.net/file/style.d433c0ad3cba3dfc3628d612b7b42e23.css" rel="stylesheet" type="text/css" />
+<style>
+a, a:hover, .day{color:#828d95;}
+.sidelist{min-width:535px;}
+.sidelist li a, .tag a, .active{background-color:#828d95;}
+.day{ border-color:#828d95;}
+.text blockquote{ border-left-color:#828d95;}
+body{background-color:#dfdfe1;}
+#morecontent_frame{margin-top:30px;}
+body{background-image:url(//imglf3.nosdn0.126.net/img/1553236065974180.png);}
+body{background-attachment:fixed;}
+.notes .action{width:500px;}
+#comment_frame{width:530px;}
+.video object,.video embed{width:530px;height:441px;}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</style>
+</head>
+<iframe id="control_frame" allowtransparency="true" scrolling="no" frameborder="0" style="position:fixed;_position:absolute;clear:both; width: 425px; height: 32px; z-index:1337; top:0; right:15px;zoom:1; border:0px; background-color:transparent; overflow:hidden;" src="//www.lofter.com/control?blogId=487959427&postId=280641176" ></iframe>
+<iframe style="display:none" src="https://l.bst.126.net/rsc/htm/music.html" ></iframe>
+<body>
+<div class="h95"></div>
+<div class="box wid700  "> 
+    <div class="selfinfo">
+        
+            <div class="logo">
+                <a href="/"><img src="https://avaimg.nosdn.127.net/img/YTRUaWYzVW9rVWJ6RGJJM042VmxqTzlzZ2kzSU9GYWRDZm40RVplVUVNOVpYeTRoa1kwZTZBPT0.jpg?imageView&thumbnail=96x96&quality=90&type=jpg"><i></i></a>
+            </div>
+            <h1><a href="/">rustylock</a></h1>
+            <div class="text"></div>
+        
+        
+    </div>
+    <div class="sch">
+        <form action="/search" method="get">
+            <input value="搜索" type="text" name="q" onFocus="if(this.value=='搜索'){this.value='';}" onBlur="if(this.value==''){this.value='搜索';}" class="txt"/>
+        </form>
+    </div>
+    <ul class="sidelist">
+             
+        
+        <li><a href="https://www.lofter.com/message/iyniq" rel="nofollow">私信</a></li>
+        
+        
+        <li><a href="https://iyniq.lofter.com/view">归档</a></li>
+        <li><a href="https://iyniq.lofter.com/rss">RSS</a></li>
+    </ul>
+</div>
+<div class="postwrapper box wid700  ">
+    
+        
+            <div class="block article">
+                
+                    <div class="side">
+                        <div class="day"><a href="https://iyniq.lofter.com/post/1d15ab83_10ba3e98">25</a></div>
+                        <div class="month"><a href="https://iyniq.lofter.com/post/1d15ab83_10ba3e98">07</a></div>
+                    </div>
+                
+                <div class="main">
+                    <div class="content">
+                        <div class="text">
+                            <h2><a href="https://iyniq.lofter.com/post/1d15ab83_10ba3e98">【静临】不可控性（一）</a></h2>
+                            
+                            
+                                <p><strong>*临烧背景</strong><br /></p> 
+<p><strong>*私设有</strong></p> 
+<p><strong>*逻辑死</strong></p> 
+<p><b>————————————————————————————</b></p> 
+<p><strong></strong></p> 
+<p>“今天的坐先生……有些不一样呢。”</p> 
+<p>“不一样的是临也少爷你吧，老朽可没见过你这副严阵以待的架势。放松点吧，只是回池袋与久违的双亲见面而已。”</p> 
+<p>黑发青年将目光从老者白得刺眼的衬衫领子上移开。接着又像想到什么似的，装作若无其事地将目光移了回来。戴着眼镜的老者一如既往地穿着以黑白为主色调的西装，可确实与过去的样式有些不同，这让临也感到了一股没来由的违和。他露出了一个僵硬的微笑，回到“真是难得啊，您偶尔也会把我当做晚辈一样关心呢。不过还是提前告知您一下，池袋可是这个世界上最——最危险的地方了，于我而言。”</p> 
+<p>“可别误会了，老朽只是不希望自己作为保镖的能力遭到质疑而已。再说危险什么的，不就是你雇佣老朽的意义吗。”说着，年老的绅士理了理自己的领结。</p> 
+<p>啊啊，黑色的领结，为什么偏偏是黑色的领结呢。总觉得坐先生有哪里不太对劲，但是现在这些都无关紧要了。</p> 
+<p>自己才是不对劲的那个吧。临也暗暗叹了口气，接着庆幸自己没有带上遥人——他可不想在崇拜自己的小鬼面前被打飞啊，万一的话。</p> 
+<p>敷衍地朝对方笑了笑，黑发的青年有些烦躁地望向了窗外。在接到自己妹妹们打来的电话之前，他是没有想过自己回到池袋的理由会是这个。</p> 
+<p>不久前，舞流以一如既往的活泼语调在电话里声称他们的父亲快回来了，并且想与“将要结束出差”的临也见面。</p> 
+<p>舞流编的这个理由真是……老老实实说自己在外地工作不就好了，偏偏要说什么“将要结束出差”……</p> 
+<p>临也有些头疼地想着，这下他就不得不离开武野仓，回到那个让现在的他有些恐惧的地方。</p> 
+<p>“恐惧”，临也用上了这样的形容，尽管他是极不情愿使用这个词的。</p> 
+<p>尽力使自己不去想那个引发自己恐惧的因素，就像是要逃避自己对那个人无计可施的现状，黑发青年重新将思绪转回了许久未见的父母那里。他们基本上会每隔一两年会回日本一次，有时则间隔得更久。与他们相处的记忆很普通，普通到临也能够十分自然地将他们视为一道分界线——与他日常经历的那些光怪陆离、惊心动魄的生活相比，可以说是泾渭分明了。而在更久之前，他是没见过什么脖子以上只有一团黑烟的机车手和能从手中凭空伸出利刃的女子高中生的，包括那些个开着痛车四处游荡的家伙、操着奇怪口音的日语叫卖寿司的黑人巨汉、娃娃脸的后辈和某个暗医——这些记忆成群结队地驰骋过他那紧绷的大脑，似乎是成功地碾死了某株灰暗而又蠢蠢欲动的幼苗。临也舒了口气，自认已经能够自如地抑制住某些让他“搞不定”的想法了。他认为这并非逃避，而是经历过无数次徒劳的思考后，暂且产生的一个决定：</p> 
+<p>平和岛静雄，那个人身上存在着临也无法解释的矛盾——当然只是现在。临也对于解开这个矛盾有着近乎顽固的自信，所以他只是“暂时”不去想，为了不再浪费时间。</p> 
+<p>等到再次真正面对他的时候，自己就会得到答案了。</p> 
+<p>察觉到目的地的迫近，黑发的青年想忽然想起什么似的，再次对面前的老者发起了请求：</p> 
+<p>“那个，虽然之前提起过了，但还是希望坐先生务必要保持万分的警惕啊。”</p> 
+<p>临也这么讪笑到，为自己的瑟缩感到一点无奈。</p> 
+<p>“不得不说临也少爷今天真是格外的啰嗦啊。虽然老朽并没有兴趣了解你的那些心理阴影，可至少还是会保护雇主的安全的。”</p> 
+<p>白发的老者彬彬有礼地，同时不带什么感情地回到，开始打量起这个他们所到达的地方。</p> 
+<p>池袋，看上去庸庸碌碌，倒是充满了生机啊。</p> 
+<p>＊＊＊</p> 
+<p>折原九琉璃远远地就看见了一头金发，以及标志性的酒保服。</p> 
+<p>于是她轻轻扯了扯折原舞流的袖子。</p> 
+<p>后者不解地转头，在看到那个背影的时候发出了一声欢快的轻呼。接着她拉起九琉璃的手，追了过去。</p> 
+<p>“静——雄——桑！”</p> 
+<p>少女以与外表不符的活泼声线打着招呼，小跑着跟上了身着酒保服的男人。</p> 
+<p>“噢噢，是你们啊。”静雄回头，看见了面容相似，装扮和气质却截然不同的两名少女。</p> 
+<p>“安（你好）……幽（幽平先生）……何（最近怎样呢）？”稍显阴沉的那位发问了。</p> 
+<p>果然……一上来就是这样的问题啊。简直像是某种惯例一样。</p> 
+<p>静雄叹了口气，与折原两姐妹的对话基本上都是以类似的问题开场，而他也像往常那样无法给出准确的答复——他的确不太清楚幽的行程。大部分时候都是身为弟弟的幽来联系他，在短暂的会面后又急急奔往下一个片场。</p> 
+<p>“还是老样子，最近好像又在忙着拍什么新电影吧。我也有一段时间没见到幽了啊。”想像之前那样糊弄过去，静雄挠了挠头，却见两姐妹的背后，一个中年男人正朝这个方向走来。</p> 
+<p>“舞流，九琉璃，走得太快了吧，也体谅一下爸爸我啊。”</p> 
+<p>“父（爸爸）……慢（太慢了）。”</p> 
+<p>“毕竟比不上你们年轻人啦。话说回来……原来是碰到了熟人吗？”</p> 
+<p>“是通过阿临哥认识的哦。”</p> 
+<p>“哦哦，是临也的朋友啊。”有着与临也相似面孔的男人笑着打了个&nbsp;招呼。</p> 
+<p>才不是什么朋友啊！静雄心下反驳到。</p> 
+<p>不过……真的很像啊，如果忽略脸上的皱纹的话。原来这位就是死跳蚤的父亲吗？自己之前就有所耳闻，说是临也的父母常年在海外工作，也只是些普通人。可眼前的这位，&nbsp;感觉比想象中要更加普通来着……那个跳蚤，以后也会像这样吗，成为一个随处可见的、招架不住青春期女儿的老爹？</p> 
+<p>不，不可能的，完全没法想象啊。</p> 
+<p>静雄毫不犹豫地否决了自己的设想。</p> 
+<p>面对着那三张与临也相似的脸，静雄感受到了一阵冲击，脑子变得有些混乱。他含糊地回应到：“呃……唔，是的，伯父好。在下是平和岛静雄，与跳……临也是中学同学。”</p> 
+<p>对方是普通人，就不用引起没必要的麻烦了吧。这么想着，虽然有些变扭，但静雄没有否认与临也的朋友关系。</p> 
+<p>“哈哈，我家儿子受你照顾了啊。”名为折原四郎的男子，同时也是临也与折原双子的父亲，露出了爽朗的笑容。</p> 
+<p>静雄稍微放松下一些的心，又重新绷紧了。</p> 
+<p>就连笑起来也这么像啊！</p> 
+<p>静雄不禁想起了从前，临也一边挂着像这样爽朗的笑容，一边将小刀捅向自己的场境。</p> 
+<p>一股久违的、夹杂着怒火以及其他一些东西的热度开始涌向大脑和四肢。他甚至产生了一种“死跳蚤就在附近”的错觉。</p> 
+<p>等等，刚刚对方说了“照顾”对吧？</p> 
+<p>最近时常被他人评价为“圆滑了不少”的静雄，将这普通的寒暄听出了别的意味，顿时又冷静下来。</p> 
+<p>这么说，对方大概已经知道了自己和临也的事吧？虽然自己也是偶然从一个奇怪的人那里听说到死跳蚤还活着的消息，但却不知道他的具体情况。</p> 
+<p>自己应该做出一个成熟的回应，静雄心想。对于与临也的厮杀，或者说是决斗，他并不感到后悔。可对于面前这位普通的父亲，他产生了一点类似于“管教了别家挠伤他人的猫，结果过火了”的愧意。</p> 
+<p>虽然临也的行为要恶劣得多了。</p> 
+<p>折原四郎看着神色阴晴不定的金发青年，觉得这个年轻人还挺有意思的。对方却在此时发话了：</p> 
+<p>“我会负责的。”</p> 
+<p>“诶？”</p> 
+<p>“我是说……临也的事，我会负责的。”</p> 
+<p>以为对方没听清楚，静雄又重复了一遍，心想这可以算是比较得体的回答了吧。</p> 
+<p>看着青年严肃的面容，再结合他刚刚复杂的表情和欲言又止的神态，折原四郎逐渐明白过来了。</p> 
+<p>这个年轻人，和临也是那种关系吗？</p> 
+<p>虽然自己在海外工作时也曾参加过一些……特殊的婚礼，日常也见过不少这种类型的人，却没想到自己的儿子竟然也……</p> 
+<p>真是一点征兆都没有啊。</p> 
+<p>这样想着，折原四郎惊讶之余又不禁感叹到：“你和临也……好吧，我不在的时候，真是发生了很多事情呢。就连我之前每次回日本都要去一趟的那间居酒屋都不在了，说是因为旁边的大楼发生了事故什么的……”</p> 
+<p>是指自己和死跳蚤打斗时破坏的那栋楼吗？已经了解到这种程度，还以这样委婉的方式提起来了，果然是有在顾及自己的心情吧？</p> 
+<p>“不过啊，舞流倒是说要介绍给我另一家不错的店呢。静雄君也一起来吗？”</p> 
+<p>去吧。刚刚自己也说了要负债，却不知道具体该怎么做，不如姑且听听对方是怎么说的。这样想着，静雄答应了下来。</p> 
+<p><br /></p> 
+<p>“两（那两个人）……误（产生了误解吧）。”</p> 
+<p>“没问题啦。这不是很有趣嘛！”</p> 
+<p>舞流小声与姐姐议论着，不近不远地跟随着前方的两人，同时再次看了眼手机。</p> 
+<p>会发生什么呢，自己简直迫不及待了！</p> 
+<p>tbc.</p> 
+<p><br /></p> 
+<p>这是一篇临烧读后感(误</p> 
+<p>总而言之，第一次写文，感到十分紧张！希望大家多指教哇!</p>
+                            
+                        </div>
+                    </div>
+            
+
+            
+
+            
+
+            
+                    
+                    
+                        <div class="tag">
+                            <a href="https://iyniq.lofter.com/tag/%E9%9D%99%E4%B8%B4">● 静临</a>
+                        </div>
+                    
+                    <div class="link">
+                        <a href="https://iyniq.lofter.com/post/1d15ab83_10ba3e98">评论(12)</a>
+                        <a href="https://iyniq.lofter.com/post/1d15ab83_10ba3e98">热度(121)</a>
+                        
+                        
+                        
+                        
+                    </div>
+                    
+                    
+                    
+                    
+                </div>
+            </div>
+            
+            
+                
+                    <div class="block">
+                        <div class="main comment">
+                            <h3 class="nctitle">评论(12)</h3>
+                            <iframe id="comment_frame" allowtransparency="true" scrolling="no" frameborder="0" style="background-color:transparent; overflow:hidden;" src="https://www.lofter.com/comment.do?pid=280641176&bid=487959427&listlinkcolor=828d95&listcontentcolor=737373&listbordercolor=ddd&inputbordercolor=ddd"></iframe>
+                        </div>
+                    </div>
+                
+                
+                    <div class="block">
+                        <div class="main comment">
+                            <h3 class="nctitle">热度(121)</h3>
+                            
+	<script>
+	function load_more_notes (_e, postId, offset) {
+		_e = _e || window.event;
+		!!_e.stopPropagation ? _e.stopPropagation() : _e.cancelBubble = true;
+		!!_e.preventDefault ? _e.preventDefault(): _e.returnValue = false;
+		var more = document.getElementById('more_notes_' + offset);
+		var loading = document.getElementById('notes_loading_' + offset);
+		more.style.display = 'none';
+		loading.style.display = 'block';
+		if(window.ActiveXObject) {
+			var req=new ActiveXObject('Microsoft.XMLHTTP');
+		} else if (window.XMLHttpRequest) {
+			var req=new XMLHttpRequest();
+		} else {
+			return;
+		}
+		req.onreadystatechange=function(){
+			if (req.readyState==4) {
+				var loading = document.getElementById('notes_loading_' + offset);
+				var notes_html=req.responseText;
+				if (!!window.more_notes_loaded) {
+					more_notes_loaded(notes_html);
+				}
+				var more_notes_link=document.getElementById('more_notes_' + offset);
+				var notes=more_notes_link.parentNode;
+				notes.removeChild(more_notes_link);
+				notes.removeChild(loading);
+				notes.innerHTML = notes.innerHTML + notes_html;
+			}
+		}
+		req.open('GET', 'https://iyniq.lofter.com/'.replace(/^(http[s]{0,1}:\/\/)/,location.protocol+'//')+'morenotes?postid='+postId+'&offset='+offset,true);
+		req.send();
+	}
+	</script>
+	<script>
+		if (!!window.notes_inserted) {
+			notes_inserted();
+		}
+	</script>
+	<ol class="notes">
+			<li class="note">
+				<img class="avatar" src="//l.bst.126.net/rsc/img/icon_collection.png">
+				<span class="action">
+					共1人收藏了此文字
+					</span><div class="clear"></div>
+
+			</li>
+		<li class="note like">
+			<a href="//kuonji-arisu.lofter.com/" title="久遠寺回声 - 07/08 23:32"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/Y3pqNmZXN1doQVJVSUlTeGt5ankvdzlnVWZzREc5SFZ0dWxEYUthcGlOMVVEZlFxWU5XN1p3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//kuonji-arisu.lofter.com/" title="久遠寺回声 - 07/08 23:32">久遠寺回声</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//max27.lofter.com/" title="U-Know - 05/27 22:25"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/SGJKV244UktqRnJrelNSdW9RZVQ0TXE4SGk3aSsyUUMyOUVWZFJJRlNCaCsreTJOdmI5WGN3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//max27.lofter.com/" title="U-Know - 05/27 22:25">U-Know</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//houshaomahua.lofter.com/" title="彦蔓 - 04/07 15:15"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/N0RjaG5TdjhzUnhYWlYrc1owS1NPakRnT05wVXg4d3pVM3NIQjR2b2hIcis1cUE4ZE12QlVRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//houshaomahua.lofter.com/" title="彦蔓 - 04/07 15:15">彦蔓</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//speedping1874.lofter.com/" title="Speedping - 02/20 20:49"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/UnZudEFJOWJsSk14Z3RhYlNNamk3OFlxVDFrblJJYk02eUJ3TXd0cHJJc0dpRmVjQm1Oa1VRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//speedping1874.lofter.com/" title="Speedping - 02/20 20:49">Speedping</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//narotosasuke.lofter.com/" title="可爱的观天枫叶 - 02/15 10:39"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/cTNVRUkzOUFVTG55QllEbUQyd2dTU2xvdGJPSnF5bHZPYzV2SGhiQmhETWpWMUtYQ01nYmxRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//narotosasuke.lofter.com/" title="可爱的观天枫叶 - 02/15 10:39">可爱的观天枫叶</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//wuza4334.lofter.com/" title="甘樂 - 02/02 01:11"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/OUhHbFdIMWo1elAvQ1l0L1RVZmJ4ZGpuQ0JhWkFSUXdhSUZhUlF4ajMrMXVzY2tObjkyekNBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//wuza4334.lofter.com/" title="甘樂 - 02/02 01:11">甘樂</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//mangmangzi.lofter.com/" title="茫茫子 - 01/11 05:14"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/ay9yb1JBSk5jQXJQS1R1T3VJQ0xHTENKY0g2V0l0bm1XaTlhQ3ZXLzhJalpESUpEaTFoVmFnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//mangmangzi.lofter.com/" title="茫茫子 - 01/11 05:14">茫茫子</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//zheyuanxintu722.lofter.com/" title="百花冰梦幻 - 2019/12/25 20:44"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/Y2o1cm4zS040dXJ2NzRlamtIT2lBYVFZaDROTnBqTXJLb0ZvekM2Nzl3Sk5VVmZ6WXRXUUt3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//zheyuanxintu722.lofter.com/" title="百花冰梦幻 - 2019/12/25 20:44">百花冰梦幻</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//cc532149045.lofter.com/" title="花落知多少 - 2019/09/04 03:12"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/UHF5R0tOZEpwZmd6T3IyRHRlbHJxZnlKUGtKTVdLMFVXME4wb0ZueGYwZHdLVDRyOWN6ajVRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//cc532149045.lofter.com/" title="花落知多少 - 2019/09/04 03:12">花落知多少</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//beckyto.lofter.com/" title="Becky To - 2019/07/18 18:38"><img class="avatar" src="https://imglf5.nosdn0.126.net/img/TDNOZWs1QU9mWGw1aS9ML3FvMnozRW9ZWDhKazdkVkYyWUNBU2sxbnFWWnUxRnJrN0hSUVZRPT0.jpg?imageView&amp;amp;thumbnail=1680x0&amp;amp;quality=96&amp;amp;stripmeta=0&amp;amp;type=jpg"></a>
+			<span class="action">
+					<a href="//beckyto.lofter.com/" title="Becky To - 2019/07/18 18:38">Becky To</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//az00567.lofter.com/" title="殊蘭 - 2019/06/28 01:55"><img class="avatar" src="https://avaimg.nosdn0.126.net/avaimg/M3Vwanh4cit2VjB5cU9XdnkwdDdhZz09.png?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//az00567.lofter.com/" title="殊蘭 - 2019/06/28 01:55">殊蘭</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//yumian641.lofter.com/" title="渔 眠 - 2019/06/23 00:50"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/c3RZc0Rvbi9sZldTeE9lS1lDSlJqMWtUSm1UQ0JINTRmM0hQeVF6MXBxbllXYm9pY1Z0a2tRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//yumian641.lofter.com/" title="渔 眠 - 2019/06/23 00:50">渔 眠</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//beitai252.lofter.com/" title="备胎 - 2019/06/19 21:07"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/SVZWckRzRHNOYkF1VnBTUTdhTDBhTmJvMm56Y3VQUGR1NHFzV0ZFeXNXRGlQdU0yL0JBM0JBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//beitai252.lofter.com/" title="备胎 - 2019/06/19 21:07">备胎</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//dropitha.lofter.com/" title="花驹 - 2019/06/05 09:13"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/UjNPcFVDM25XcENuc3JTcU1NZnhsaDQ5Z2IxZ08zSU95b2lBQWtoamhzMTR3T1hGc2JSRGpnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//dropitha.lofter.com/" title="花驹 - 2019/06/05 09:13">花驹</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//9527cxbg.lofter.com/" title="浅浅 - 2019/04/06 02:21"><img class="avatar" src="https://imglf4.nosdn0.126.net/img/S2JGQ3BqOVdoVVZVb216SEd0cldKSnhlUEkvekhoZXBCT0dPMGFzZ2pLSFZwWlRublViNStnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//9527cxbg.lofter.com/" title="浅浅 - 2019/04/06 02:21">浅浅</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//mengzhiyuehua.lofter.com/" title="梦之月华 - 2019/03/31 22:36"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/UkgrQVJrNWhMcG1WeUdXa1ZJZGNkMkQ1c0pnYi9ZYk1XdTZHdlYzS1dqNGlzQVNEaVdZNUd3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//mengzhiyuehua.lofter.com/" title="梦之月华 - 2019/03/31 22:36">梦之月华</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//longzuzhiming.lofter.com/" title="火鸡味锅巴 - 2019/02/14 02:37"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/UldIUmhxYTZLdmVMZktVMFF1N3JBa2hMWGJFSkhpdFovR2FHTUZVSFlid3M4Z0k3SGtiTkxBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//longzuzhiming.lofter.com/" title="火鸡味锅巴 - 2019/02/14 02:37">火鸡味锅巴</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//15545587965.lofter.com/" title="世界和平 - 2018/05/20 11:33"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/UkhialBGdlVZaTdValUrVGhNN203UXZDVy9Rak1KTlV1OW9Vd0d4MHMvc3J6UGxJZ2U2QThRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//15545587965.lofter.com/" title="世界和平 - 2018/05/20 11:33">世界和平</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//hakutakuizaya.lofter.com/" title="EcoR I - 2018/02/22 10:46"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/VDBIL2tQSmgwQjhKUjZJWUszM082MHo5a0RsWloyNTVvN1JxSmZsSXNvZHh5Z0Q5SitKZC9BPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//hakutakuizaya.lofter.com/" title="EcoR I - 2018/02/22 10:46">EcoR I</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//rimuyeluo578.lofter.com/" title="日暮叶落 - 2018/02/18 17:07"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/a1I3TVZEM2h0dDdDU0dzamwzTHNSdExLTFc3aTE1VDdqNUFoTmFnd0lYZFlLbXZLTkJ4TGVRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//rimuyeluo578.lofter.com/" title="日暮叶落 - 2018/02/18 17:07">日暮叶落</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//starlight990.lofter.com/" title="折原熙☆ - 2018/02/18 07:52"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/V2RkN1FYMGswVjhSQ2xmOTViQTNjUjgxYTMwNkpqbXkzVXFKajRBWmJBUERzQjU2ZW9yUjdBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//starlight990.lofter.com/" title="折原熙☆ - 2018/02/18 07:52">折原熙☆</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//xiaoqianxun.lofter.com/" title="胡椒粉又不够了啊！！... - 2018/02/13 13:33"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/eWk3MWVCdGFGY2ZzQUVrcE1mRk9HeWZmT2FBRWkxamVYK2x5cEdOZXc2eEpac3dZQ0pCU2xRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//xiaoqianxun.lofter.com/" title="胡椒粉又不够了啊！！... - 2018/02/13 13:33">胡椒粉又不够了啊！！！</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//cjmhy.lofter.com/" title="宸璟 - 2018/02/06 10:25"><img class="avatar" src="https://imglf4.nosdn0.126.net/img/b1hRQjc0ckxKb0ZxQlJuQlJsVVRsc3BjYk56cVQ0SGxNMTNNM21OeGk5TThFTTJlUFFQVVFnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//cjmhy.lofter.com/" title="宸璟 - 2018/02/06 10:25">宸璟</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//yezibusuan.lofter.com/" title="叶子不酸 - 2018/01/15 14:57"><img class="avatar" src="https://imglf3.nosdn0.126.net/img/RC9Td2hibTZ3ZlpRZUNCYUFjeDdzUmo3djZOM0JWVVdMTVZGb0lsZU40R09Pc0VsK2FQMytBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//yezibusuan.lofter.com/" title="叶子不酸 - 2018/01/15 14:57">叶子不酸</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//luoyufengya.lofter.com/" title="蓝知更鸟 - 2017/12/03 11:28"><img class="avatar" src="https://imglf4.nosdn0.126.net/img/M1RSU0VHSS9KRXZWZEw4K0tKVi9tQjlFdmVycWhFMEw4a1drUXFzTUtmQkRUL0lET0VBdVlnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//luoyufengya.lofter.com/" title="蓝知更鸟 - 2017/12/03 11:28">蓝知更鸟</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//aimei700.lofter.com/" title="爱魅 - 2017/12/02 10:49"><img class="avatar" src="https://imglf5.nosdn0.126.net/img/RXFla2VGODU3MEk0emNPTFRTVlVzb0NKdWlMWnRWemZ1eTdVOEVCbHpNM0N5SWt5Y3VmMzh3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//aimei700.lofter.com/" title="爱魅 - 2017/12/02 10:49">爱魅</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//baifei189.lofter.com/" title="Porcelain - 2017/11/13 19:17"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/ZFgyR3dKdXFLMXBVWjNJRytBWVB6Qk42cmxEUlVrOHh2b25aSjdWZXFGRlA2WnBPWnNONk13PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//baifei189.lofter.com/" title="Porcelain - 2017/11/13 19:17">Porcelain</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//0504izayalove.lofter.com/" title="驴友君 - 2017/10/29 16:48"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/NzdWcUgvSytzUnVudE9hNGtGMndEZWxIOTQzNWt4OWUvWXhxN2ZMOGtENlZXTEpYSHgxRnZRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//0504izayalove.lofter.com/" title="驴友君 - 2017/10/29 16:48">驴友君</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//onod54.lofter.com/" title="映桐天 - 2017/10/24 12:58"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/cExpTlF4UTdzNjFVSWF4WFNwSXJBQTBWZWduOGVScnE0SVhrTkIyMEdHNlVTS0IxN1lOTUR3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//onod54.lofter.com/" title="映桐天 - 2017/10/24 12:58">映桐天</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//21006565.lofter.com/" title="ヂョタタヲ！！ - 2017/10/19 00:20"><img class="avatar" src="https://avaimg.nosdn0.126.net/avaimg/eTl3R2VEOG9vcklDaDh4UWFxaTR2Zz09.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//21006565.lofter.com/" title="ヂョタタヲ！！ - 2017/10/19 00:20">ヂョタタヲ！！</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//18682515653.lofter.com/" title="爱与正义的咕哒子 - 2017/10/15 23:22"><img class="avatar" src="https://avaimg.nosdn0.126.net/avaimg/STl5b0hUb3NrM2hsaTNDbFJ4NUhyQT09.png?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//18682515653.lofter.com/" title="爱与正义的咕哒子 - 2017/10/15 23:22">爱与正义的咕哒子</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//9090950w.lofter.com/" title="9090950w - 2017/10/10 00:16"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/WExOL1JIbzd0VW9NNjRVbzFjTWdvRmd0SEdkQ1hEVUVJa1RJZmZGOW1NZndMc2xuVjJJOUZBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//9090950w.lofter.com/" title="9090950w - 2017/10/10 00:16">9090950w</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//renjianshige347.lofter.com/" title="ガラスせいぶつ - 2017/10/07 12:31"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/N3ZyQ0czcVV6S3NCUVdvRDhUM2pHVVA4bDhLWktUdTljei8rMW9MVCtNdGxnU2YzNzJST0dnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//renjianshige347.lofter.com/" title="ガラスせいぶつ - 2017/10/07 12:31">ガラスせいぶつ</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//sharewords.lofter.com/" title="词 - 2017/10/04 10:55"><img class="avatar" src="https://l.bst.126.net/rsc/img/ava/110.png"></a>
+			<span class="action">
+					<a href="//sharewords.lofter.com/" title="词 - 2017/10/04 10:55">词</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//2353556941.lofter.com/" title="长胖了吗 - 2017/10/03 00:12"><img class="avatar" src="https://avaimg.nosdn0.126.net/avaimg/RUsvWFQxYzhGU0ZzbTh0bXZjY1paQT09.png?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//2353556941.lofter.com/" title="长胖了吗 - 2017/10/03 00:12">长胖了吗</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//2353556941.lofter.com/" title="长胖了吗 - 2017/10/03 00:12"><img class="avatar" src="https://avaimg.nosdn0.126.net/avaimg/RUsvWFQxYzhGU0ZzbTh0bXZjY1paQT09.png?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//2353556941.lofter.com/" title="长胖了吗 - 2017/10/03 00:12">长胖了吗</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//20180310.lofter.com/" title="椰汁 - 2017/10/02 10:05"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/Yk52alR2b0lKSUhNSVhNVEoxYWNrQXgyY0J2R1kyTHJiQlhJTm9TZUl6RmMwbnZtYUhBY0tnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//20180310.lofter.com/" title="椰汁 - 2017/10/02 10:05">椰汁</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//jueyixiaotian.lofter.com/" title="王老耀 - 2017/10/01 17:53"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/Z1VhTXgvYkt0WG5RM2s4MDlHU3N5d1dndkQzNi9iYjNNUkFhanlZWDhSZ2dNb0lXYnJDdVh3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//jueyixiaotian.lofter.com/" title="王老耀 - 2017/10/01 17:53">王老耀</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//jintianchiyouziyaoo.lofter.com/" title="今天吃柚子呀 - 2017/09/29 08:19"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/cXJ2NDRkOTRlVFNQejMxOFZrTXNMNzZUSE1yM25DTzlvUjVjamNTcDRNaS9zZm5MaGU5d0RRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//jintianchiyouziyaoo.lofter.com/" title="今天吃柚子呀 - 2017/09/29 08:19">今天吃柚子呀</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//ccs57108.lofter.com/" title="豆桑 - 2017/09/29 00:11"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/TTd0dzhDTWhGcGVWOStuTFdlSkJFUG84djZLSWVLYXZiUzNnZXhkbmVnNWthbTEzU3ZZK0NRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//ccs57108.lofter.com/" title="豆桑 - 2017/09/29 00:11">豆桑</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//01145724.lofter.com/" title="本瓶不邪 - 2017/09/25 23:34"><img class="avatar" src="https://avaimg.nosdn0.126.net/avaimg/ZDhXbWYyVUhrVE9zTTdWRmRLRjdMQT09.png?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//01145724.lofter.com/" title="本瓶不邪 - 2017/09/25 23:34">本瓶不邪</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//circlemiao.lofter.com/" title="甘唄 - 2017/09/25 01:06"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/aHMvZmFsdnRRcGVWMmdiWGJwb01wT2RXL1EzZmtrcnZsdUZvbkxkc2crYUpMYmR2WVdEU0tRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//circlemiao.lofter.com/" title="甘唄 - 2017/09/25 01:06">甘唄</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//luchicaishibaichi.lofter.com/" title="雁丞. - 2017/09/23 20:55"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/V1dPYWtjdDczdTQrTEVWdUpMQjdRanNDRkMvQktCVDVyVXBQRFlHY2E3bXltMzZUU2dYVjJnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//luchicaishibaichi.lofter.com/" title="雁丞. - 2017/09/23 20:55">雁丞.</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//tangmoqing.lofter.com/" title="折原家的崽种 - 2017/09/17 20:28"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/UGt6TmpZTjl1dE83ZUdhZkh0bWc3OXNiNFdWeFh4R3lHd0FOS3RPRk8wWVBWQ0RCQThWTkVBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//tangmoqing.lofter.com/" title="折原家的崽种 - 2017/09/17 20:28">折原家的崽种</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//yiyayiyayo126.lofter.com/" title="。 - 2017/09/16 12:44"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/OXpjb20vRTBxSG0xY093U3pyYU9KNFlVTVYvTktBaW5pcldDa2dUU08rbnExajdOSTUwQ0dBPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//yiyayiyayo126.lofter.com/" title="。 - 2017/09/16 12:44">。</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//chu-xiaoyan0514.lofter.com/" title="少冰奶茶 - 2017/09/06 11:19"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/VHBZSWxWckR2dHFIRk1BcGFVZ2tGU3dYbnZKVEd5K2xaMm1IRDlkRE9Bb1dkdlgzekJOUFNnPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//chu-xiaoyan0514.lofter.com/" title="少冰奶茶 - 2017/09/06 11:19">少冰奶茶</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//setsueichihara.lofter.com/" title="梦奈_SetsueiChi - 2017/08/31 23:22"><img class="avatar" src="https://imglf4.nosdn0.126.net/img/QlZob3FTdmZETzArejNNLzg1YWY1N3J4SnhlNW15U0g3TElTNFNlSCtlZmRmZDlSdjArNnJ3PT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//setsueichihara.lofter.com/" title="梦奈_SetsueiChi - 2017/08/31 23:22">梦奈_SetsueiChi</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//meiying-xi.lofter.com/" title="如昨 - 2017/08/30 13:48"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/TzBsR0Z1VU1MWFlTMFBXQ2UxVyt2M3l6VS9RWDVvSUhyL1FrRVE3dUdPaEV2Y1B4VCtEdE9BPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//meiying-xi.lofter.com/" title="如昨 - 2017/08/30 13:48">如昨</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note share">
+			<a href="//jianghuai649.lofter.com/" title="pilgrim皮 - 2017/08/29 15:54"><img class="avatar" src="https://avaimg.nosdn0.126.net/img/MWVKZXlnRktNSUJXY2p4RmxFZkdpTmk5ZjhhUVkyTjZvRGltOUFNMUpPbVZRUmp3Vm1qTTNRPT0.jpg?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//jianghuai649.lofter.com/" title="pilgrim皮 - 2017/08/29 15:54">pilgrim皮</a> 推荐了此文字
+					</span><div class="clear"></div>
+		</li>
+		<li class="note like">
+			<a href="//ttaibm1314.lofter.com/" title="风遥轻语 - 2017/08/28 22:48"><img class="avatar" src="https://avaimg.nosdn0.126.net/avaimg/eHVJeS9DSlI2dzhSSnBLS0IvTWNZdz09.png?imageView&thumbnail=16y16"></a>
+			<span class="action">
+					<a href="//ttaibm1314.lofter.com/" title="风遥轻语 - 2017/08/28 22:48">风遥轻语</a> 很喜欢此文字
+					</span><div class="clear"></div>
+		</li>
+		<li id="notes_loading_50" style="display:none;text-align:center;" class="note">
+			<span>加载中...</span>
+		</li>
+		<li id="more_notes_50" style="text-align:center;" class="note more_notes_link_container">
+			<a onclick="load_more_notes(event,280641176,50)" href="#" class="more_notes_link">查看更多</a>
+		</li>
+	</ol>
+
+                        </div>
+                    </div>
+                
+            
+        
+        
+
+        
+            <div class="page">
+                <div class="prev active"><a href="https://iyniq.lofter.com/post/1d15ab83_11360001" id="__prev_permalink__"><span class="cap"></span><span class="arrow"></span><span class="title">上一篇</span></a></div>
+                
+                
+                <div class="next disable"><span class="cap"></span><span class="arrow"></span><span class="title">下一篇</span></div>
+            </div>
+        
+</div>
+<div class="footer"><span title="Copyright" style="cursor:pointer;">©</span> <a href="https://iyniq.lofter.com/">rustylock</a> | Powered by <a href="//www.lofter.com">LOFTER</a></div>
+<script type="text/javascript" src="//l.bst.126.net/rsc/js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript">
+$(function(){
+    if($('.postwrapper > .block').length <= 0) {
+        $('.postwrapper').css('display', 'none');
+    }
+    $(".active a").each(function(){ 
+        $(this).hover(
+            function(){
+                $(this).css("cursor","pointer");
+                $(this).stop();
+                $(this).animate({width:90},400,function(){$(this).children(".title").css("display","block");})},
+            function(){
+                $(this).stop(); 
+                $(this).children(".title").css("display","none");
+                $(this).animate({width:20},400)})
+    })
+});
+</script>
+<script type="text/javascript" src="//imglf3.nosdn0.126.net/file/script.47af7718745a2e654437f5743fcbc69a.js"></script>
+
+<link media='screen' type='text/css' rel='stylesheet' href='//l.bst.126.net/rsc/css/theme/r/pagephotoshow.min.css?0002'/><script type='text/javascript' src='//l.bst.126.net/rsc/js/theme/r/pagephotoshow.min.js?0016'></script><script type='text/javascript'>P('loft.w.g').initPagePhotoShow(document.body,{});</script>
+<script type='text/javascript'>window.pagewidget=true;</script>
+
+
+<script>(function(document,datracker,root){function loadJsSDK(){var script,first_script;script=document.createElement("script");script.type="text/javascript";script.async=true;script.src="https://hubble-js-bucket.nosdn.127.net/DATracker.globals.1.6.8.js";first_script=document.getElementsByTagName("script")[0];first_script.parentNode.insertBefore(script,first_script)}if(!datracker["__SV"]){var win=window;var gen_fn,functions,i,lib_name="DATracker";window[lib_name]=datracker;datracker["_i"]=[];datracker["init"]=function(token,config,name){var target=datracker;if(typeof(name)!=="undefined"){target=datracker[name]=[]}else{name=lib_name}target["people"]=target["people"]||[];target["abtest"]=target["abtest"]||[];target["toString"]=function(no_stub){var str=lib_name;if(name!==lib_name){str+="."+name}if(!no_stub){str+=" (stub)"}return str};target["people"]["toString"]=function(){return target.toString(1)+".people (stub)"};function _set_and_defer(target,fn){var split=fn.split(".");if(split.length==2){target=target[split[0]];fn=split[1]}target[fn]=function(){target.push([fn].concat(Array.prototype.slice.call(arguments,0)))}}functions="track_heatmap register_attributes register_attributes_once clear_attributes unregister_attributes current_attributes single_pageview disable time_event get_appStatus track set_userId track_pageview track_links track_forms register register_once alias unregister identify login logout signup name_tag set_config reset people.set people.set_once people.set_realname people.set_country people.set_province people.set_city people.set_age people.set_gender people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.set_populationWithAccount  people.set_location people.set_birthday people.set_region people.set_account abtest.get_variation abtest.async_get_variable".split(" ");for(i=0;i<functions.length;i++){_set_and_defer(target,functions[i])}datracker["_i"].push([token,config,name])};datracker["__SV"]=1.6;loadJsSDK()}})(document,window["DATracker"]||[],window);
+DATracker.init('MA-BFD7-963BF6846668', {truncateLength: 255});
+</script>
+<script>window.Theme = {'ImageProtected':false,'CcType':0,ContextValue:'&copy;&nbsp;rustylock'};</script>
+<script src="//l.bst.126.net/rsc/js/themecommon.js?0030" type="text/javascript"></script>
+<script src="https://analytics.163.com/ntes.js" type="text/javascript"></script><script>_ntes_nacc = 'lofter';try{neteaseTracker();}catch(e){}</script>
+<script>var _gaq = _gaq || [];_gaq.push(['_setAccount', 'UA-31007899-1'],['_setLocalGifPath', '/UA-31007899-1/__utm.gif'],['_setLocalRemoteServerMode']);_gaq.push(['_setDomainName', 'lofter.com']);_gaq.push(['_trackPageview']);(function() { var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true; ga.src = 'https://wr.da.netease.com/ga.js'; var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s); })();</script>
+</body>
+</html>

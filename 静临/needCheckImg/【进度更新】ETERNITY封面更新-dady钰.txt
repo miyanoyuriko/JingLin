@@ -1,0 +1,16 @@
+https://dadyu.lofter.com/post/426a28_ab24f6e
+【进度更新】ETERNITY封面更新-dady钰
+
+
+<p class="m-about">❀静临❀</p>
+			
+			<!-- Search -->
+			<div class="m-sch">
+				<form id="j-formsch" class="form" method="get" action="/search">
+					<input type="text" name="q" class="txt" value="搜索" onfocus="if(this.value=='搜索'){this.value='';}" onblur="if(this.value==''){this.value='搜索';}"/>
+				</form>
+			
+<p>今天最后一校终于完成，晚上回家排版然后送印，印刷时间应该是一个礼拜左右，没有大问题的话可以按时发货，最重要的，eternity封面换了，如下：</p> 
+<p><img src="https://imglf0.ph.126.net/yjvAnr_2aycfvryHemWePQ==/1992842835212672886.png"  border="0"  hspace="0"  vspace="0"  smallsrc="https://imglf0.ph.126.net/qkLyCIiE8G-qa6WfGGEsng==/6598118700810804159.png"  /><br />感觉比原来那个好看很多ww</p>
+<p class="m-cprt">&copy;&nbsp;<a href="https://dadyu.lofter.com/">dady钰</a>&nbsp;|&nbsp;Powered by <a href="//www.lofter.com">LOFTER</a></p>
+		
